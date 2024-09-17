@@ -35,6 +35,7 @@ export default function Component() {
   const [isHovered, setIsHovered] = useState(false)
   const [isLiveActive, setIsLiveActive] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [playerDimensions, setPlayerDimensions] = useState({ width: 480, height: 270 })
   const nodeRef = useRef(null)
 
   const nextSlide = useCallback(() => {
@@ -50,14 +51,26 @@ export default function Component() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768)
+      const isMobileView = window.innerWidth <= 768
+      setIsMobile(isMobileView)
+      
+      if (isMobileView) {
+        // Set player dimensions to cover the entire width and maintain aspect ratio
+        const aspectRatio = 16 / 9
+        const newWidth = window.innerWidth
+        const newHeight = newWidth / aspectRatio
+        setPlayerDimensions({ width: newWidth, height: newHeight })
+      } else {
+        // Reset to default dimensions for desktop
+        setPlayerDimensions({ width: 480, height: 270 })
+      }
     }
 
     const updatePosition = () => {
       checkMobile()
       if (!isMobile) {
-        const finalX = window.innerWidth - 480 - 16
-        const finalY = window.innerHeight - 270 - 16
+        const finalX = window.innerWidth - playerDimensions.width - 16
+        const finalY = window.innerHeight - playerDimensions.height - 16
         setPosition({ x: finalX, y: finalY })
       }
       setIsAnimating(false)
@@ -72,11 +85,11 @@ export default function Component() {
     return () => {
       window.removeEventListener('resize', updatePosition)
     }
-  }, [isMobile])
+  }, [isMobile, playerDimensions])
 
   const checkLiveStatus = async () => {
     try {
-      const response = await fetch('https://kick.com/api/v1/channels/xqc')
+      const response = await fetch('https://kick.com/api/v1/channels/duelgamble')
       const data = await response.json()
       setIsLiveActive(data.livestream !== null)
     } catch (error) {
@@ -220,7 +233,7 @@ export default function Component() {
               <div className={`responsive-iframe-container ${isHovered ? 'hovered' : ''}`}>
                 <iframe 
                   className="responsive-iframe"
-                  src="https://player.kick.com/xqc?autoplay=true?muted=false" 
+                  src="https://player.kick.com/duelgamble?autoplay=true?muted=false" 
                   frameBorder="0" 
                   scrolling="no" 
                   allowFullScreen={true}
